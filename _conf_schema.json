@@ -1,0 +1,77 @@
+{
+    "enable_rag": {
+        "description": "启用 RAG Pro 知识增强",
+        "type": "bool",
+        "hint": "开启后，用户提问将自动检索本地知识库并无感注入相关上下文。",
+        "default": true
+    },
+    "enable_vector": {
+        "description": "启用真实稠密向量检索",
+        "type": "bool",
+        "hint": "开启后将调用 AstrBot 配置的 Embedding 模型进行向量语义检索，与 BM25 双轨召回。",
+        "default": true
+    },
+    "embedding_provider_id": {
+        "description": "指定 Embedding Provider ID",
+        "type": "string",
+        "hint": "指定计算向量的模型提供商 ID（如 openai_embedding），留空则自动选用已激活的首个 Embedding 提供商。",
+        "default": ""
+    },
+    "score_threshold": {
+        "description": "RRF 综合置信度截断阈值",
+        "type": "float",
+        "hint": "综合相关度低于此阈值的片段将被丢弃，防止噪音注入，默认 0.35。",
+        "default": 0.35
+    },
+    "top_k": {
+        "description": "最大召回知识块数",
+        "type": "int",
+        "hint": "单次最多注入的知识切片数量，默认 3。",
+        "default": 3
+    },
+    "max_context_chars": {
+        "description": "上下文总字符预算上限",
+        "type": "int",
+        "hint": "注入给 LLM 的知识库总字符数上限，超出时优先保证靠前切片及代码块完整性，默认 2500。",
+        "default": 2500
+    },
+    "chunk_size": {
+        "description": "二级分块字符数",
+        "type": "int",
+        "hint": "单一切片建议最大字符数，并在代码块保护前提下切分，默认 500。",
+        "default": 500
+    },
+    "chunk_overlap": {
+        "description": "分块滑动窗口重叠字符数",
+        "type": "int",
+        "hint": "连续切片之间的上下文重叠量，默认 60。",
+        "default": 60
+    },
+    "bm25_weight": {
+        "description": "BM25 稀疏检索权重",
+        "type": "float",
+        "hint": "RRF 融合中 BM25 关键词检索的权重比重，默认 0.5。",
+        "default": 0.5
+    },
+    "vector_weight": {
+        "description": "向量稠密检索权重",
+        "type": "float",
+        "hint": "RRF 融合中向量语义检索的权重比重，默认 0.5。",
+        "default": 0.5
+    },
+    "suppress_native_rag": {
+        "description": "抑制 AstrBot 原生低质知识库检索",
+        "type": "bool",
+        "hint": "开启后，若 RAG Pro 命中知识将自动压制原生检索，避免 0.12/0.08 低分噪声与双重注入。",
+        "default": true
+    },
+    "extra_kb_dirs": {
+        "description": "额外扫描知识库目录列表",
+        "type": "list",
+        "hint": "额外扫描包含 Markdown / TXT 文档的目录路径列表。",
+        "default": [
+            "/AstrBot/data/workspaces",
+            "/AstrBot/data/knowledge_base"
+        ]
+    }
+}

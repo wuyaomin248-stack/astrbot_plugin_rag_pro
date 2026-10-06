@@ -1,0 +1,5 @@
+name: astrbot_plugin_rag_pro
+desc: 基于 BM25 + 向量真双轨 RRF 混合召回的精准 RAG 插件（增量缓存与代码块保护）
+version: 0.2.0
+author: 日海 & 橙子汐
+repo: https://github.com/wuyaomin248-stack/astrbot_plugin_rag_pro
