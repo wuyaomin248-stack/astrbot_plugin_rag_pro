@@ -9,8 +9,8 @@ import json
 import sqlite3
 import hashlib
 import time
-from typing import List, Dict, Any, Optional, Tuple, Set
-from astrbot.api import logger
+from typing import List, Dict, Any, Optional, Tuple
+
 from .splitter import DocumentChunk
 
 class IndexDatabase:

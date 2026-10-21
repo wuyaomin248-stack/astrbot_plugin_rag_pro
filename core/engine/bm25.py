@@ -1,6 +1,9 @@
 """
-纯 Python 轻量级 BM25 Okapi 算法实现
-支持分词统计、IDF 倒排持久化与增量检索
+纯 Python 轻量级 BM25 Okapi 实现
+
+无第三方依赖；构建倒排统计并提供与查询相关的文档打分。
+支持中英混合分词，并保留代码符号（下划线、连字符、点号），
+使函数名与报错码这类精确词在稀疏检索轨上仍可命中。
 """
 
 import math
@@ -19,11 +22,32 @@ class BM25Okapi:
 
     @staticmethod
     def tokenize(text: str) -> List[str]:
-        """中英混合分词与代码符号保留分词"""
+        """中英混合分词与代码符号保留分词
+
+        英文/标识符按 `[a-zA-Z0-9_\\-\\.]+` 整段保留，使
+        `get_embeddings_batch`、`error_code_401` 这类精确词不会被切碎。
+
+        中文按二元组（bigram）切分。逐字切分会把「安装」「插件」拆成
+        互不相关的单字，导致中文查询几乎无法命中；bigram 能保留词内
+        相邻关系，同时不需要引入分词词典。
+        """
         if not text:
             return []
         text = text.lower()
-        tokens = re.findall(r'[a-zA-Z0-9_\-\.]+|[\u4e00-\u9fa5]', text)
+
+        tokens: List[str] = []
+        # 先把连续的中文与其它字符分段处理
+        for segment in re.findall(r'[\u4e00-\u9fa5]+|[^\u4e00-\u9fa5]+', text):
+            if re.match(r'[\u4e00-\u9fa5]', segment):
+                if len(segment) == 1:
+                    tokens.append(segment)
+                else:
+                    # 二元组滑窗，保留相邻字之间的搭配信息
+                    for i in range(len(segment) - 1):
+                        tokens.append(segment[i : i + 2])
+            else:
+                tokens.extend(re.findall(r'[a-zA-Z0-9_\-\.]+', segment))
+
         return [t.strip() for t in tokens if t.strip()]
 
     def fit(self, corpus: List[str]):

@@ -1,0 +1,126 @@
+{
+  "description": "Retrieval benchmark for astrbot_plugin_rag_pro. Queries are real-world developer questions against an AstrBot knowledge base; expected_chunks are the doc sections that must be retrieved.",
+  "corpus_dir": "docs",
+  "queries": [
+    {
+      "id": "q01",
+      "query": "how to configure embedding provider",
+      "expected": ["install.md::Embedding"],
+      "note": "paraphrase, no exact keyword overlap is required"
+    },
+    {
+      "id": "q02",
+      "query": "get_embeddings_batch",
+      "expected": ["api.md::Embedding methods"],
+      "note": "exact identifier; dense-only retrieval loses this"
+    },
+    {
+      "id": "q03",
+      "query": "error_code_401 unauthorized",
+      "expected": ["errors.md::401"],
+      "note": "exact error code"
+    },
+    {
+      "id": "q04",
+      "query": "报了 401 错误怎么办",
+      "expected": ["errors.md::401"],
+      "note": "Chinese paraphrase of a code lookup"
+    },
+    {
+      "id": "q05",
+      "query": "chunk_size and chunk_overlap settings",
+      "expected": ["config.md::Chunking"],
+      "note": "config keys"
+    },
+    {
+      "id": "q06",
+      "query": "why is my knowledge base not retrieved",
+      "expected": ["troubleshooting.md::No retrieval"],
+      "note": "verbose natural-language question"
+    },
+    {
+      "id": "q07",
+      "query": "BM25 weight versus vector weight",
+      "expected": ["retrieval.md::Hybrid weights"],
+      "note": "concept query with two competing terms"
+    },
+    {
+      "id": "q08",
+      "query": "score_threshold 0.35",
+      "expected": ["retrieval.md::Threshold"],
+      "note": "numeric parameter"
+    },
+    {
+      "id": "q09",
+      "query": "如何安装插件",
+      "expected": ["install.md::Install"],
+      "note": "Chinese install question"
+    },
+    {
+      "id": "q10",
+      "query": "suppress native rag double injection",
+      "expected": ["integration.md::Native RAG"],
+      "note": "feature description"
+    },
+    {
+      "id": "q11",
+      "query": "IndexDatabase file_hash mtime",
+      "expected": ["storage.md::Incremental"],
+      "note": "class and field names"
+    },
+    {
+      "id": "q12",
+      "query": "incremental re-index only changed files",
+      "expected": ["storage.md::Incremental"],
+      "note": "paraphrase of the same feature"
+    },
+    {
+      "id": "q13",
+      "query": "code block gets cut in half",
+      "expected": ["storage.md::Code fence safety"],
+      "note": "symptom-style query"
+    },
+    {
+      "id": "q14",
+      "query": "MarkdownSplitter split_text",
+      "expected": ["api.md::Splitter methods", "storage.md::Incremental"],
+      "note": "exact method name; both sections describe splitting"
+    },
+    {
+      "id": "q15",
+      "query": "top_k too many chunks injected",
+      "expected": ["config.md::Chunking"],
+      "note": "parameter plus symptom"
+    },
+    {
+      "id": "q16",
+      "query": "cosine similarity fallback without numpy",
+      "expected": ["retrieval.md::Vector search"],
+      "note": "implementation detail"
+    },
+    {
+      "id": "q17",
+      "query": "plugin not loading on startup",
+      "expected": ["troubleshooting.md::Startup"],
+      "note": "operational issue"
+    },
+    {
+      "id": "q18",
+      "query": "如何让中文也能被检索到",
+      "expected": ["retrieval.md::Tokenization"],
+      "note": "Chinese question about tokenizer"
+    },
+    {
+      "id": "q19",
+      "query": "KV cache memory usage during long context",
+      "expected": [],
+      "note": "out-of-scope; correct behaviour is to return nothing"
+    },
+    {
+      "id": "q20",
+      "query": "how do I bake sourdough bread",
+      "expected": [],
+      "note": "off-topic distractor; must not inject anything"
+    }
+  ]
+}

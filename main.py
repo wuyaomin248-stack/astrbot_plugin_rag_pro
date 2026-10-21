@@ -1,7 +1,7 @@
 import os
 import time
 import json
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 
 from astrbot.api import logger
 from astrbot.api.event import filter, AstrMessageEvent
@@ -10,6 +10,7 @@ from astrbot.core.provider.entities import ProviderRequest
 
 from .core.engine.bm25 import BM25Okapi
 from .core.engine.rrf import HybridRRF
+from .core.engine.relevance import query_coverage
 from .core.engine.vector import VectorRetrievalEngine
 from .core.engine.kb_bridge import KnowledgeSourceBridge
 from .core.storage.splitter import MarkdownSplitter, DocumentChunk
@@ -45,6 +46,7 @@ class RagProPlugin(Star):
         
         self.chunks: List[DocumentChunk] = []
         self._doc_id_to_chunk: Dict[int, DocumentChunk] = {}
+        self._vocab: Set[str] = set()
         self._is_ready = False
 
     async def initialize(self):
@@ -138,6 +140,11 @@ class RagProPlugin(Star):
         corpus = [f"{c.header}\n{c.content}" for c in self.chunks]
         self.bm25_engine.fit(corpus)
 
+        # 全库词表，供相关性门槛使用
+        self._vocab = set()
+        for text in corpus:
+            self._vocab.update(BM25Okapi.tokenize(text))
+
         # 填充向量引擎
         self.vector_engine.clear()
         if vector_map:
@@ -179,6 +186,17 @@ class RagProPlugin(Star):
 
         # 若双轨均无召回，安全退出
         if not ranked_bm25_doc_ids and not ranked_vector_doc_ids:
+            return
+
+        # 2.5 绝对相关性门槛：RRF 只按排名融合，丢掉了"到底像不像"的信息。
+        # 若不加这一层，像 "how do I bake sourdough bread" 这种完全离题的提问，
+        # 只要命中一个常见字就会进候选并被归一化成高分，最终污染提示词。
+        # 判定基于全库词表，而不是候选集——候选集本身可能已经漏召。
+        min_coverage = float(self.config.get("min_query_coverage", 0.0))
+        if min_coverage > 0 and self._query_coverage(query) < min_coverage:
+            logger.debug(
+                f"[rag_pro] 查询与知识库相关性不足 (coverage < {min_coverage})，跳过注入"
+            )
             return
 
         # 3. 真实 RRF 多路加权融合
@@ -238,6 +256,18 @@ class RagProPlugin(Star):
             req.system_prompt = rag_inject_str
 
         logger.info(f"[rag_pro] 成功为用户提问隐式注入 {len(qualified)} 条高质知识 (双轨融合，总长度 {total_chars} 字符)")
+
+    def _query_coverage(self, query: str) -> float:
+        """查询词项被**整个知识库**覆盖的 IDF 加权比例（0~1）。
+
+        用于把"完全离题"的提问挡在注入之前。语料里不存在的词按不覆盖
+        且高权重计入，因此 "how do I bake sourdough bread" 会被
+        sourdough/bread 拉低。
+
+        统计范围是全库而不是候选集：候选集本身可能已经漏召，用它算
+        覆盖率会形成「召回差 → 覆盖率低 → 被否决」的循环依赖。
+        """
+        return query_coverage(query, [self._vocab], self.bm25_engine.idf)
 
     @filter.command("rag")
     async def rag_command(self, event: AstrMessageEvent, action: str = "status"):
